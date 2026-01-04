@@ -1,74 +1,69 @@
 const axios = require('axios');
-const cheerio = require('cheerio');
 
-// Class dari kode Anda
 class ShortUrl {
+    // 1. IS.GD (Menggunakan API Resmi JSON)
     isgd = async function (url) {
         try {
-            // Validasi dasar
-            if (!url.startsWith('http')) throw new Error('URL harus menyertakan https:// atau http://');
-            
-            const { data } = await axios.post('https://cors.caliph.my.id/https://is.gd/create.php', new URLSearchParams({
-                url: url,
-                shorturl: '',
-                opt: 0
-            }).toString(), {
-                headers: {
-                    'content-type': 'application/x-www-form-urlencoded',
-                    origin: 'https://is.gd',
-                    referer: 'https://is.gd/',
-                    'user-agent': 'Mozilla/5.0 (Linux; Android 15; SM-F958 Build/AP3A.240905.015) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.6723.86 Mobile Safari/537.36'
-                }
+            // Validasi URL
+            if (!url.match(/^https?:\/\//)) {
+                url = 'https://' + url;
+            }
+
+            const response = await axios.get('https://is.gd/create.php', {
+                params: {
+                    format: 'json',
+                    url: url
+                },
+                timeout: 5000 // Timeout 5 detik agar tidak hang
             });
-            
-            const $ = cheerio.load(data);
-            const result = $('input#short_url').attr('value');
-            if (!result) throw new Error('Gagal membuat link is.gd (Mungkin limit atau error server).');
-            
-            return result;
+
+            if (response.data.errorcode) {
+                throw new Error(response.data.errormessage || 'Is.gd menolak URL ini.');
+            }
+
+            return response.data.shorturl;
         } catch (error) {
-            throw new Error(error.message);
+            console.error('ISGD Error:', error.message);
+            throw new Error('Gagal memproses is.gd. Pastikan URL valid.');
         }
     }
     
-    tinube = async function (url, suffix = '') {
+    // 2. TINYURL (Pengganti Tinu.be agar 100% Sukses)
+    tinyurl = async function (url, alias = '') {
         try {
-            if (!url.startsWith('http')) throw new Error('URL harus menyertakan https:// atau http://');
-            
-            // Generate random suffix jika kosong agar tidak error duplikat
-            const finalSuffix = suffix || Math.random().toString(36).substring(2, 8);
+             if (!url.match(/^https?:\/\//)) {
+                url = 'https://' + url;
+            }
 
-            const { data } = await axios.post('https://tinu.be/en', [{
-                longUrl: url,
-                urlCode: finalSuffix
-            }], {
-                headers: {
-                    'next-action': '74b2f223fe2b6e65737e07eeabae72c67abf76b2',
-                    'next-router-state-tree': '%5B%22%22%2C%7B%22children%22%3A%5B%22(site)%22%2C%7B%22children%22%3A%5B%5B%22lang%22%2C%22en%22%2C%22d%22%5D%2C%7B%22children%22%3A%5B%22__PAGE__%22%2C%7B%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%2Ctrue%5D',
-                    origin: 'https://tinu.be',
-                    referer: 'https://tinu.be/en',
-                    'user-agent': 'Mozilla/5.0 (Linux; Android 15; SM-F958 Build/AP3A.240905.015) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.6723.86 Mobile Safari/537.36'
-                }
+            // TinyURL API Endpoint
+            let apiUrl = `https://tinyurl.com/api-create.php?url=${encodeURIComponent(url)}`;
+            if (alias) {
+                apiUrl += `&alias=${encodeURIComponent(alias)}`;
+            }
+
+            const response = await axios.get(apiUrl, {
+                timeout: 5000
             });
-            
-            // Parsing Logic yang ketat sesuai payload Next.js
-            const line = data.split('\n').find(line => line.startsWith('1:'));
-            if(!line) throw new Error('Respons dari Tinu.be tidak valid.');
 
-            const result = JSON.parse(line.substring(2)).data.urlCode;
-            if (!result) throw new Error('Custom Alias sudah digunakan atau tidak tersedia.');
-            
-            return 'https://tinu.be/' + result;
+            if (response.data === 'Error') {
+                 throw new Error('Alias sudah digunakan atau URL tidak valid.');
+            }
+
+            return response.data;
         } catch (error) {
-            console.error(error); // Log error untuk debugging di Vercel
-            throw new Error('Gagal memproses Tinu.be: ' + error.message);
+            console.error('TinyURL Error:', error.message);
+            // Handle error spesifik dari TinyURL jika alias duplikat
+            if(error.response && error.response.status === 422) {
+                throw new Error('Custom Alias sudah terpakai. Coba kata lain.');
+            }
+            throw new Error('Gagal memproses TinyURL.');
         }
     }
 }
 
-// Handler utama Vercel
+// Handler Vercel
 module.exports = async (req, res) => {
-    // Izinkan CORS agar bisa diakses
+    // Header CORS agar frontend bisa akses
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -78,10 +73,15 @@ module.exports = async (req, res) => {
     }
 
     if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed' });
+        return res.status(405).json({ status: false, error: 'Method Not Allowed' });
     }
 
     const { url, provider, alias } = req.body;
+
+    if (!url) {
+        return res.status(400).json({ status: false, error: 'URL tidak boleh kosong.' });
+    }
+
     const shortener = new ShortUrl();
 
     try {
@@ -89,10 +89,10 @@ module.exports = async (req, res) => {
         
         if (provider === 'isgd') {
             resultUrl = await shortener.isgd(url);
-        } else if (provider === 'tinube') {
-            resultUrl = await shortener.tinube(url, alias);
+        } else if (provider === 'tinyurl') {
+            resultUrl = await shortener.tinyurl(url, alias);
         } else {
-            return res.status(400).json({ error: 'Provider tidak valid' });
+            return res.status(400).json({ status: false, error: 'Provider tidak valid.' });
         }
 
         return res.status(200).json({ status: true, result: resultUrl });
