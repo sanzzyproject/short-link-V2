@@ -3,29 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>URL Shortener Pro</title>
+    <title>Short Link Pro</title>
     <style>
-        /* CSS Variables untuk Tema */
+        /* CSS Variables Monokrom */
         :root {
-            --bg-color: #f2f2f2;      /* Putih Tua / Abu Terang */
-            --card-bg: #ffffff;       /* Putih Bersih */
-            --text-main: #333333;     /* Abu Tua */
-            --text-sec: #666666;      /* Abu Sedang */
-            --border: #e0e0e0;
-            --accent: #2c2c2c;        /* Hampir Hitam */
-            --accent-hover: #4a4a4a;
+            --bg-body: #f4f4f6;       /* Abu Platinum (Putih Tua) */
+            --bg-card: #ffffff;
+            --text-pri: #2d3436;      /* Abu Gelap (Hampir Hitam) */
+            --text-sec: #636e72;      /* Abu Medium */
+            --accent: #2d3436;        /* Hitam Elegan */
+            --border: #dfe6e9;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
+            background-color: var(--bg-body);
+            color: var(--text-pri);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -33,272 +27,237 @@
             padding: 20px;
         }
 
-        /* Container Layout */
         .container {
-            background-color: var(--card-bg);
+            background: var(--bg-card);
             width: 100%;
-            max-width: 480px;
-            padding: 2rem;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            max-width: 460px;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
             border: 1px solid var(--border);
         }
 
-        /* Typography */
         h1 {
-            font-size: 1.5rem;
-            font-weight: 700;
+            font-size: 1.6rem;
+            font-weight: 800;
             text-align: center;
-            margin-bottom: 0.5rem;
-            color: var(--accent);
+            margin-bottom: 5px;
+            letter-spacing: -0.5px;
         }
 
-        p.subtitle {
+        p.desc {
             text-align: center;
             color: var(--text-sec);
             font-size: 0.9rem;
             margin-bottom: 2rem;
         }
 
-        /* Form Elements */
-        .form-group {
-            margin-bottom: 1.25rem;
-        }
-
+        .form-group { margin-bottom: 1.2rem; }
+        
         label {
             display: block;
             margin-bottom: 0.5rem;
             font-size: 0.85rem;
             font-weight: 600;
-            color: var(--text-main);
+            color: var(--text-pri);
         }
 
-        input[type="url"],
-        input[type="text"],
-        select {
+        input, select {
             width: 100%;
-            padding: 12px 16px;
+            padding: 14px;
             border: 2px solid var(--border);
             border-radius: 8px;
             font-size: 1rem;
-            background-color: #fafafa;
-            color: var(--text-main);
-            transition: all 0.3s ease;
+            background: #fafafa;
+            color: var(--text-pri);
+            transition: 0.2s;
             outline: none;
+            -webkit-appearance: none; /* Fix iOS style */
         }
 
         input:focus, select:focus {
             border-color: var(--text-sec);
-            background-color: #fff;
+            background: #fff;
         }
 
-        /* Button */
-        button.btn-submit {
+        button.btn-main {
             width: 100%;
-            padding: 14px;
-            background-color: var(--accent);
+            padding: 16px;
+            background: var(--accent);
             color: #fff;
             border: none;
             border-radius: 8px;
+            font-weight: 700;
             font-size: 1rem;
-            font-weight: 600;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: opacity 0.2s;
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
-        button.btn-submit:hover {
-            background-color: var(--accent-hover);
-        }
+        button.btn-main:hover { opacity: 0.9; }
+        button.btn-main:disabled { background: #b2bec3; cursor: not-allowed; }
 
-        button.btn-submit:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
-
-        /* Result Area */
-        #result-area {
+        /* Result Section */
+        #result-box {
+            display: none;
             margin-top: 2rem;
             padding-top: 1.5rem;
             border-top: 1px dashed var(--border);
-            display: none; /* Hidden by default */
-            animation: fadeIn 0.5s ease;
+            animation: slideUp 0.4s ease;
         }
 
-        .result-box {
+        .input-group {
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
 
         .result-input {
-            flex-grow: 1;
-            padding: 10px;
-            background: #f4f4f4;
-            border: 1px solid var(--border);
-            border-radius: 6px;
+            background: #f1f2f6;
             color: var(--accent);
-            font-weight: bold;
+            font-weight: 700;
+            border: 1px solid var(--border);
         }
 
         .btn-copy {
-            padding: 0 15px;
-            background: #e0e0e0;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
+            width: auto;
+            padding: 0 20px;
+            background: #dfe6e9;
+            color: var(--text-pri);
             font-weight: 600;
-            color: var(--text-main);
-        }
-        
-        .btn-copy:hover {
-            background: #d0d0d0;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
         }
 
         .error-msg {
-            color: #d32f2f;
+            background: #ffebee;
+            color: #c62828;
+            padding: 10px;
+            border-radius: 6px;
             font-size: 0.85rem;
-            margin-top: 5px;
+            margin-bottom: 1rem;
             text-align: center;
             display: none;
+            border: 1px solid #ffcdd2;
         }
 
         /* Loading Spinner */
         .spinner {
             width: 18px;
             height: 18px;
-            border: 2px solid #ffffff;
-            border-bottom-color: transparent;
+            border: 2px solid rgba(255,255,255,0.3);
             border-radius: 50%;
-            display: inline-block;
-            box-sizing: border-box;
-            animation: rotation 1s linear infinite;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
         }
 
-        @keyframes rotation {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Mobile specific adjustments */
+        /* Mobile Fixes */
         @media (max-width: 480px) {
-            .container {
-                padding: 1.5rem;
-                width: 95%;
-            }
-            h1 { font-size: 1.3rem; }
+            .container { padding: 1.5rem; border: none; box-shadow: none; background: transparent; }
+            body { background: #fff; align-items: flex-start; }
+            h1 { font-size: 1.5rem; }
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>Short Link Generator</h1>
-        <p class="subtitle">Buat tautan pendek dengan mudah dan cepat.</p>
+        <h1>Short Link</h1>
+        <p class="desc">Buat tautan pendek profesional & cepat.</p>
+
+        <div id="errorMsg" class="error-msg"></div>
 
         <form id="shortenForm">
             <div class="form-group">
-                <label for="urlInput">Long URL</label>
-                <input type="url" id="urlInput" placeholder="https://example.com/very-long-url..." required>
+                <label>URL Tujuan</label>
+                <input type="text" id="urlInput" placeholder="https://..." required autocomplete="off">
             </div>
 
             <div class="form-group">
-                <label for="providerSelect">Provider</label>
+                <label>Provider</label>
                 <select id="providerSelect">
-                    <option value="isgd">Is.gd (Otomatis)</option>
-                    <option value="tinube">Tinu.be (Custom Alias)</option>
+                    <option value="isgd">Is.gd (Otomatis & Cepat)</option>
+                    <option value="tinyurl">TinyURL (Bisa Custom Nama)</option>
                 </select>
             </div>
 
             <div class="form-group" id="aliasGroup" style="display: none;">
-                <label for="aliasInput">Custom Alias (Opsional)</label>
-                <input type="text" id="aliasInput" placeholder="contoh: promosi-ku" maxlength="30">
-                <small style="color: #888; font-size: 0.75rem;">Biarkan kosong untuk acak.</small>
+                <label>Custom Nama (Opsional)</label>
+                <input type="text" id="aliasInput" placeholder="contoh: diskon-ramadhan" maxlength="30">
             </div>
 
-            <div class="error-msg" id="errorMsg"></div>
-
-            <button type="submit" class="btn-submit" id="submitBtn">
+            <button type="submit" class="btn-main" id="submitBtn">
                 <span id="btnText">Shorten URL</span>
                 <span class="spinner" id="loadingSpinner" style="display: none;"></span>
             </button>
         </form>
 
-        <div id="result-area">
-            <label>Link Pendek Anda:</label>
-            <div class="result-box">
+        <div id="result-box">
+            <label>Link Berhasil Dibuat:</label>
+            <div class="input-group">
                 <input type="text" class="result-input" id="resultUrl" readonly>
-                <button class="btn-copy" id="copyBtn" onclick="copyToClipboard()">Copy</button>
+                <button class="btn-copy" onclick="copyResult()">Copy</button>
             </div>
         </div>
     </div>
 
     <script>
+        // Logika Frontend
         const form = document.getElementById('shortenForm');
         const providerSelect = document.getElementById('providerSelect');
         const aliasGroup = document.getElementById('aliasGroup');
+        const errorMsg = document.getElementById('errorMsg');
+        const resultBox = document.getElementById('result-box');
+        const resultUrl = document.getElementById('resultUrl');
         const submitBtn = document.getElementById('submitBtn');
         const btnText = document.getElementById('btnText');
         const spinner = document.getElementById('loadingSpinner');
-        const resultArea = document.getElementById('result-area');
-        const resultUrlInput = document.getElementById('resultUrl');
-        const errorMsg = document.getElementById('errorMsg');
-        const copyBtn = document.getElementById('copyBtn');
 
-        // Tampilkan input alias hanya jika Tinu.be dipilih
+        // Toggle Custom Alias hanya untuk TinyURL
         providerSelect.addEventListener('change', () => {
-            if (providerSelect.value === 'tinube') {
-                aliasGroup.style.display = 'block';
-            } else {
-                aliasGroup.style.display = 'none';
-            }
+            aliasGroup.style.display = providerSelect.value === 'tinyurl' ? 'block' : 'none';
         });
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // Reset UI
+            // Reset State
             errorMsg.style.display = 'none';
-            resultArea.style.display = 'none';
+            resultBox.style.display = 'none';
             submitBtn.disabled = true;
             btnText.textContent = 'Memproses...';
             spinner.style.display = 'inline-block';
-            copyBtn.textContent = 'Copy';
-            copyBtn.style.background = '#e0e0e0';
-            copyBtn.style.color = '#333';
 
-            const url = document.getElementById('urlInput').value;
-            const provider = providerSelect.value;
-            const alias = document.getElementById('aliasInput').value;
+            const payload = {
+                url: document.getElementById('urlInput').value,
+                provider: providerSelect.value,
+                alias: document.getElementById('aliasInput').value
+            };
 
             try {
-                const response = await fetch('/api/shorten', {
+                const req = await fetch('/api/shorten', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        url: url,
-                        provider: provider,
-                        alias: alias
-                    })
+                    body: JSON.stringify(payload)
                 });
 
-                const data = await response.json();
+                const res = await req.json();
 
-                if (data.status) {
-                    resultUrlInput.value = data.result;
-                    resultArea.style.display = 'block';
+                if (res.status) {
+                    resultUrl.value = res.result;
+                    resultBox.style.display = 'block';
                 } else {
-                    throw new Error(data.error || 'Terjadi kesalahan tidak diketahui.');
+                    throw new Error(res.error || 'Gagal terhubung ke server.');
                 }
-            } catch (error) {
-                errorMsg.textContent = error.message;
+
+            } catch (err) {
+                errorMsg.textContent = err.message;
                 errorMsg.style.display = 'block';
             } finally {
                 submitBtn.disabled = false;
@@ -307,14 +266,11 @@
             }
         });
 
-        function copyToClipboard() {
-            resultUrlInput.select();
-            resultUrlInput.setSelectionRange(0, 99999); // Untuk mobile
-            navigator.clipboard.writeText(resultUrlInput.value).then(() => {
-                copyBtn.textContent = 'Copied!';
-                copyBtn.style.background = '#2c2c2c';
-                copyBtn.style.color = '#fff';
-            });
+        function copyResult() {
+            resultUrl.select();
+            resultUrl.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(resultUrl.value);
+            alert('Link berhasil disalin!');
         }
     </script>
 </body>
