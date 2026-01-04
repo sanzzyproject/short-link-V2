@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>URL Shortener Pro</title>
+    <style>
+        /* CSS Variables untuk Tema */
+        :root {
+            --bg-color: #f2f2f2;      /* Putih Tua / Abu Terang */
+            --card-bg: #ffffff;       /* Putih Bersih */
+            --text-main: #333333;     /* Abu Tua */
+            --text-sec: #666666;      /* Abu Sedang */
+            --border: #e0e0e0;
+            --accent: #2c2c2c;        /* Hampir Hitam */
+            --accent-hover: #4a4a4a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* Container Layout */
+        .container {
+            background-color: var(--card-bg);
+            width: 100%;
+            max-width: 480px;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+        }
+
+        /* Typography */
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            color: var(--accent);
+        }
+
+        p.subtitle {
+            text-align: center;
+            color: var(--text-sec);
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        input[type="url"],
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            background-color: #fafafa;
+            color: var(--text-main);
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--text-sec);
+            background-color: #fff;
+        }
+
+        /* Button */
+        button.btn-submit {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        button.btn-submit:hover {
+            background-color: var(--accent-hover);
+        }
+
+        button.btn-submit:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Result Area */
+        #result-area {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px dashed var(--border);
+            display: none; /* Hidden by default */
+            animation: fadeIn 0.5s ease;
+        }
+
+        .result-box {
+            display: flex;
+            gap: 10px;
+        }
+
+        .result-input {
+            flex-grow: 1;
+            padding: 10px;
+            background: #f4f4f4;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        .btn-copy {
+            padding: 0 15px;
+            background: #e0e0e0;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+        
+        .btn-copy:hover {
+            background: #d0d0d0;
+        }
+
+        .error-msg {
+            color: #d32f2f;
+            font-size: 0.85rem;
+            margin-top: 5px;
+            text-align: center;
+            display: none;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #ffffff;
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Mobile specific adjustments */
+        @media (max-width: 480px) {
+            .container {
+                padding: 1.5rem;
+                width: 95%;
+            }
+            h1 { font-size: 1.3rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Short Link Generator</h1>
+        <p class="subtitle">Buat tautan pendek dengan mudah dan cepat.</p>
+
+        <form id="shortenForm">
+            <div class="form-group">
+                <label for="urlInput">Long URL</label>
+                <input type="url" id="urlInput" placeholder="https://example.com/very-long-url..." required>
+            </div>
+
+            <div class="form-group">
+                <label for="providerSelect">Provider</label>
+                <select id="providerSelect">
+                    <option value="isgd">Is.gd (Otomatis)</option>
+                    <option value="tinube">Tinu.be (Custom Alias)</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="aliasGroup" style="display: none;">
+                <label for="aliasInput">Custom Alias (Opsional)</label>
+                <input type="text" id="aliasInput" placeholder="contoh: promosi-ku" maxlength="30">
+                <small style="color: #888; font-size: 0.75rem;">Biarkan kosong untuk acak.</small>
+            </div>
+
+            <div class="error-msg" id="errorMsg"></div>
+
+            <button type="submit" class="btn-submit" id="submitBtn">
+                <span id="btnText">Shorten URL</span>
+                <span class="spinner" id="loadingSpinner" style="display: none;"></span>
+            </button>
+        </form>
+
+        <div id="result-area">
+            <label>Link Pendek Anda:</label>
+            <div class="result-box">
+                <input type="text" class="result-input" id="resultUrl" readonly>
+                <button class="btn-copy" id="copyBtn" onclick="copyToClipboard()">Copy</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('shortenForm');
+        const providerSelect = document.getElementById('providerSelect');
+        const aliasGroup = document.getElementById('aliasGroup');
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+        const spinner = document.getElementById('loadingSpinner');
+        const resultArea = document.getElementById('result-area');
+        const resultUrlInput = document.getElementById('resultUrl');
+        const errorMsg = document.getElementById('errorMsg');
+        const copyBtn = document.getElementById('copyBtn');
+
+        // Tampilkan input alias hanya jika Tinu.be dipilih
+        providerSelect.addEventListener('change', () => {
+            if (providerSelect.value === 'tinube') {
+                aliasGroup.style.display = 'block';
+            } else {
+                aliasGroup.style.display = 'none';
+            }
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Reset UI
+            errorMsg.style.display = 'none';
+            resultArea.style.display = 'none';
+            submitBtn.disabled = true;
+            btnText.textContent = 'Memproses...';
+            spinner.style.display = 'inline-block';
+            copyBtn.textContent = 'Copy';
+            copyBtn.style.background = '#e0e0e0';
+            copyBtn.style.color = '#333';
+
+            const url = document.getElementById('urlInput').value;
+            const provider = providerSelect.value;
+            const alias = document.getElementById('aliasInput').value;
+
+            try {
+                const response = await fetch('/api/shorten', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        url: url,
+                        provider: provider,
+                        alias: alias
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.status) {
+                    resultUrlInput.value = data.result;
+                    resultArea.style.display = 'block';
+                } else {
+                    throw new Error(data.error || 'Terjadi kesalahan tidak diketahui.');
+                }
+            } catch (error) {
+                errorMsg.textContent = error.message;
+                errorMsg.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                btnText.textContent = 'Shorten URL';
+                spinner.style.display = 'none';
+            }
+        });
+
+        function copyToClipboard() {
+            resultUrlInput.select();
+            resultUrlInput.setSelectionRange(0, 99999); // Untuk mobile
+            navigator.clipboard.writeText(resultUrlInput.value).then(() => {
+                copyBtn.textContent = 'Copied!';
+                copyBtn.style.background = '#2c2c2c';
+                copyBtn.style.color = '#fff';
+            });
+        }
+    </script>
+</body>
+</html>
